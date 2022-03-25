@@ -99,7 +99,7 @@ def get_top40_keywords(matrix, tokens, doc_no):
 
 
 # FIND THE TOP 25 TERMS FOR EACH URL PAGE: Used to decide the top 10 terms in the top 40 terms
-def keywords_by_topic(matrix, topics, doc_no):
+def keywords_by_topic(matrix, tokens, topics, doc_no):
     rows = []  # rows to write out to csv
     for n in range(len(matrix.toarray())):  # loop through each row of tf-idf values
         idx = doc_no[n]  # find the x in url_x.txt that n is pointing to
@@ -111,7 +111,7 @@ def keywords_by_topic(matrix, topics, doc_no):
         for i in range(len(tfidf_values)):  # loop through whole row
             value = tfidf_values[i]  # get value
             if value in top_25_values:  # if value is in the list of top 25
-                top_25[tfidf_tokens[i]] = value  # get word at index i and store as {'word': tf-idf val}
+                top_25[tokens[i]] = value  # get word at index i and store as {'word': tf-idf val}
         # sort the dictionary according to value, ('word1', 0.2), ('word2', 0.1)...
         sorted_top25 = sorted(top_25.items(), key=lambda x: x[1], reverse=True)  # sort the dictionary
         word = [k[0] for k in sorted_top25]  # get the words from sorted list
@@ -132,9 +132,9 @@ if __name__ == "__main__":
     # 40 terms, and recreate the knowledge base... SO. Proceed with CAUTION
 
     # WEB CRAWLER:
-    # process = CrawlerProcess()
-    # process.crawl(Crawler.RedditSpider)
-    # process.start()
+    process = CrawlerProcess()
+    process.crawl(Crawler.RedditSpider)
+    process.start()
 
     # CREATE PROCESSED_TEXTS:
     titles = {}  # e.g. {14: 'url title'} = title of url_14.txt is 'url title'
@@ -170,7 +170,7 @@ if __name__ == "__main__":
 
     # CREATE KEYWORDS BY TOPICS:
     # OPTIONAL #
-    # data = keywords_by_topic(tfidf_matrix, titles, doc_index)  # Get the keywords
+    # data = keywords_by_topic(tfidf_matrix, tfidf_tokens, titles, doc_index)  # Get the keywords
     # csv_writer = csv.writer(open('tf-idf.csv', 'w', newline='', encoding='utf-8'))
     # csv_writer.writerows(data)
     # OPTIONAL #

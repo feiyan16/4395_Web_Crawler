@@ -1,4 +1,9 @@
-from scrapy.exceptions import CloseSpider
+import sys
+
+from scrapy.exceptions import CloseSpider, IgnoreRequest
+from scrapy import signals, Spider
+from twisted.internet.defer import Deferred, inlineCallbacks
+from twisted.python.failure import Failure, NoCurrentExceptionError
 
 import sys_color as write
 import scrapy
@@ -7,7 +12,7 @@ import scrapy
 class RedditSpider(scrapy.Spider):
     name = 'Reddit-Movies'
     # START_URLS 1:
-    # start_urls = ['https://old.reddit.com/r/movies/']
+    # start_urls = ['https://old.reddit.com/r/movscraped_textsies/']
     start_urls = ['https://old.reddit.com/search?q=the+batman&count=22&after=t3_tjkf1z']  # URL page to start with
     counter = 0  # relevant link counter, used to exit once it hits 20
 
@@ -34,6 +39,9 @@ class RedditSpider(scrapy.Spider):
 
         yield from self.go_to_next_page(response)  # go to the next page in the reddit forum/discussion
 
+        if self.counter == 20:
+            raise CloseSpider(f'link count == {self.counter}')
+
     def go_to_next_page(self, response):
         # Get the url for the next page by getting the href attribute value from the next page html button
         next_page = response.xpath('//a[contains(@rel, "nofollow next")]/@href').get()
@@ -44,8 +52,8 @@ class RedditSpider(scrapy.Spider):
             write.stderr('No Next Page')
 
     def parse_page(self, response):
-        if self.counter == 20:  # stopping condition, stops web crawler
-            raise CloseSpider(f'link count = {self.counter}')
+        if self.counter == 20:
+            raise CloseSpider(f'link count == {self.counter}')
         write.stdout(f'Parsing {response.url}...')
         body = self.scrape(response)  # scrape for texts on page
         if body:  # if body is not empty
