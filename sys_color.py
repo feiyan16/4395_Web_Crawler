@@ -9,6 +9,18 @@ class Colors:
     UNDERLINE = '\033[4m'
 
 
+def stdhead(text):
+    print(f"{Colors.HEADER}{Colors.BOLD}{text}{Colors.ENDC}")
+
+
+def stdunder(text):
+    print(f"{Colors.UNDERLINE}{text}{Colors.ENDC}")
+
+
+def stdemph(text):
+    print(f"{Colors.BOLD}{text}{Colors.ENDC}")
+
+
 def stdout(text):
     print(f"{Colors.OKBLUE}{text}{Colors.ENDC}")
 

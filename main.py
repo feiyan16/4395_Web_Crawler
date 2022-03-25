@@ -1,13 +1,19 @@
 
-import crawler as Crawler
-from scrapy.crawler import CrawlerProcess
+import csv
+import datetime
 import os
 import re
+import sqlite3
+
 import nltk
-import csv
+import requests
 from nltk import WordNetLemmatizer
 from nltk.corpus import stopwords
+from scrapy.crawler import CrawlerProcess
 from sklearn.feature_extraction.text import TfidfVectorizer
+
+import crawler as Crawler
+import sys_color as write
 
 
 # PROMPT 3:
@@ -54,36 +60,8 @@ def make_docx(filename):
     return ''.join(sentences)  # join it back into a document
 
 
-# def get_tf(doc):
-#     tokens = nltk.word_tokenize(doc)
-#     token_set = set(tokens)
-#     tf_dict = {t: tokens.count(t) for t in token_set}
-#     for t in tf_dict.keys():
-#         tf_dict[t] = tf_dict[t] / len(tokens)
-#     return tf_dict
-#
-#
-# def get_idf(docs, tf_s):
-#     idf_dict = {}
-#     vocab = []
-#     for key in [list(tf.keys()) for tf in tf_s]:
-#         vocab += key
-#     for word in vocab:
-#         count = ['x' for doc in docs if word in doc]
-#         idf_dict[word] = math.log((1 + len(docs)) / (1 + len(count)))
-#     return idf_dict
-#
-#
-# def get_tfidf(tf, idf):
-#     tf_idf = {}
-#     for t in tf.keys():
-#         tf_idf[t] = tf[t] * idf[t]
-#
-#     return tf_idf
-
-
 # PROMPT 4
-def get_top40_keywords(matrix, tokens, doc_no):
+def get_top40(matrix, tokens, doc_no):
     all_values = {}
     for n in range(len(matrix.toarray())):  # loop through each row of tf-idf values
         tfidf_values = matrix.toarray()[n]  # get the row
@@ -125,6 +103,73 @@ def keywords_by_topic(matrix, tokens, topics, doc_no):
     return rows
 
 
+def create_tables(c, conn):
+    c.execute('''
+              CREATE TABLE IF NOT EXISTS Articles
+              ([id] TEXT PRIMARY KEY, [keyword_id] INTEGER, [title] TEXT, [description] TEXT, [url] TEXT)
+              ''')
+    c.execute('''
+              CREATE TABLE IF NOT EXISTS Keywords
+              ([id] INTEGER PRIMARY KEY, [word] TEXT)
+              ''')
+    conn.commit()
+
+
+def insert_keywords(c, keywords, conn):
+    for i in range(len(keywords)):
+        word = keywords[i]
+        params = (i, word)
+        c.execute('SELECT * FROM Keywords WHERE Keywords.id=:x', {'x': i})
+        if not c.fetchall():
+            c.execute('INSERT INTO Keywords (id, word) VALUES (?, ?) ', params)
+    conn.commit()
+
+
+def get_articles(keywords):
+    articles = {}
+    apikey = '0efe81d323d843a0ad09ec1bcaf349a1'
+    today = datetime.datetime.today().strftime('%Y-%m-%d')
+    for i in range(len(keywords)):
+        word = keywords[i]
+        topic = f'{word}%20The%20Batman'
+        url = f'https://newsapi.org/v2/everything?language=en&q={topic}&apiKey={apikey}&from=2022-03-04&to={today}' \
+              f'&sortBy=relevancy&pageSize=5'
+        response = requests.get(url)
+        json = response.json()
+        status = json.get('status')
+        if status == 'ok':
+            articles[i] = json.get('articles')
+    return articles
+
+
+def insert_articles(c, key_to_articles, conn):
+    for k, articles in key_to_articles.items():
+        for a in range(len(articles)):
+            article = articles[a]
+            params = (f'{k}-{a}', k, article.get('title'), article.get('description'), article.get('url'))
+            c.execute('SELECT * FROM Articles WHERE Articles.id=:x', {'x': f'{k}-{a}'})
+            if not c.fetchall():
+                c.execute('INSERT INTO Articles (id, keyword_id, title, description, url) VALUES (?, ?, ?, ?, ?)',
+                          params)
+    conn.commit()
+
+
+def query_for_keyword_id(c, x):
+    c.execute('SELECT id FROM Keywords WHERE Keywords.word=:x', {'x': x.lower()})
+    i = c.fetchone()[0]
+    return i
+
+
+def query_for_articles(c, x):
+    c.execute('SELECT title, description, url FROM Articles WHERE Articles.keyword_id=:x', {'x': x})
+    rows = c.fetchall()
+    for row in rows:
+        write.stdhead(row[0])
+        print(row[1])
+        print(row[2])
+    return rows
+
+
 if __name__ == "__main__":
     # NOTE:
     # If you run WEB CRAWLER again, it will pull a different set of urls and ultimately
@@ -132,9 +177,9 @@ if __name__ == "__main__":
     # 40 terms, and recreate the knowledge base... SO. Proceed with CAUTION
 
     # WEB CRAWLER:
-    process = CrawlerProcess()
-    process.crawl(Crawler.RedditSpider)
-    process.start()
+    # process = CrawlerProcess()
+    # process.crawl(Crawler.RedditSpider)
+    # process.start()
 
     # CREATE PROCESSED_TEXTS:
     titles = {}  # e.g. {14: 'url title'} = title of url_14.txt is 'url title'
@@ -157,34 +202,39 @@ if __name__ == "__main__":
     tfidf_tokens = tfidfvectorizer.get_feature_names_out()
 
     # CREATE TOP 40 TERMS:
-    top_40_keywords = get_top40_keywords(tfidf_matrix, tfidf_tokens, doc_index)[:40]  # Get the 40 terms
-    # OPTIONAL #
-    # csv_writer = csv.writer(open('top-40.csv', 'w', newline='', encoding='utf-8'))  # Open and create csv file
-    # csv_writer.writerow(['WORD', 'DOCS', 'TF-IDF'])  # write header
-    # for keyword in top_40_keywords:
-    #     csv_writer.writerow([keyword[0], keyword[1][0], keyword[1][1]])  # write to row csv file
-    # OPTIONAL #
+    top_40 = get_top40(tfidf_matrix, tfidf_tokens, doc_index)[:40]  # Get the 40 terms
     print('TOP 40 Terms:')
-    keywords = [key[0] for key in top_40_keywords]
-    print(keywords)
+    top_40_keywords = [key[0] for key in top_40]
+    print(top_40_keywords)
+    # OPTIONAL #
+    csv_writer = csv.writer(open('top-40.csv', 'w', newline='', encoding='utf-8'))  # Open and create csv file
+    csv_writer.writerow(['WORD', 'DOCS', 'TF-IDF'])  # write header
+    for keyword in top_40:
+        csv_writer.writerow([keyword[0], keyword[1][0], keyword[1][1]])  # write to row csv file
+    # OPTIONAL #
 
     # CREATE KEYWORDS BY TOPICS:
     # OPTIONAL #
-    # data = keywords_by_topic(tfidf_matrix, tfidf_tokens, titles, doc_index)  # Get the keywords
-    # csv_writer = csv.writer(open('tf-idf.csv', 'w', newline='', encoding='utf-8'))
-    # csv_writer.writerows(data)
+    data = keywords_by_topic(tfidf_matrix, tfidf_tokens, titles, doc_index)  # Get the keywords
+    csv_writer = csv.writer(open('tf-idf.csv', 'w', newline='', encoding='utf-8'))
+    csv_writer.writerows(data)
     # OPTIONAL #
 
     # 10 TERMS FROM DOMAIN KNOWLEDGE:
     print('\nTOP 10 TERMS USING DOMAIN KNOWLEDGE')
-    terms_10 = ['joker', 'reeves', 'million', 'arkham', 'markets', 'love', 'knight', 'pattinson', 'dark', 'casting']
-    print(terms_10)
+    top_10_keywords = ['joker', 'reeves', 'keoghan', 'arkham', 'markets', 'theatre', 'knight', 'pattinson', 'dark',
+                       'casting']
+    print(top_10_keywords)
+    print()
 
-    # idf_set = get_idf(documents, tf_set)
-    # sorted_sets = []
-    # for tf_item in tf_set:
-    #     sorted_sets += sorted(get_tfidf(tf_item, idf_set).items(), key=lambda x: x[1], reverse=True)
-    # sorted_tfidf = list(set(sorted(sorted_sets, key=lambda x: x[1], reverse=True)))
-    # for item in sorted(sorted_tfidf, key=lambda x: x[1], reverse=True)[:40]:
-    #     print(item)
+    # BUILDING KNOWLEDGE BASE
+    connection = sqlite3.connect('Keyword_Database.sql')
+    cursor = connection.cursor()
 
+    create_tables(cursor, connection)
+    insert_keywords(cursor, top_10_keywords, connection)
+    insert_articles(cursor, get_articles(top_10_keywords), connection)
+
+    # SAMPLE QUERY
+    keyword_id = query_for_keyword_id(cursor, 'joker')
+    query_for_articles(cursor, keyword_id)
