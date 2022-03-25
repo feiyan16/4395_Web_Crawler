@@ -1,4 +1,3 @@
-
 import csv
 import datetime
 import os
@@ -130,16 +129,20 @@ def get_articles(keywords):
     apikey = '0efe81d323d843a0ad09ec1bcaf349a1'
     today = datetime.datetime.today().strftime('%Y-%m-%d')
     for i in range(len(keywords)):
-        word = keywords[i]
-        topic = f'{word}%20The%20Batman'
+        topic = f'{keywords[i]}%20The%20Batman'
         url = f'https://newsapi.org/v2/everything?language=en&q={topic}&apiKey={apikey}&from=2022-03-04&to={today}' \
               f'&sortBy=relevancy&pageSize=5'
-        response = requests.get(url)
-        json = response.json()
-        status = json.get('status')
+        json, status = api_connect(url)
         if status == 'ok':
             articles[i] = json.get('articles')
     return articles
+
+
+def api_connect(url):
+    response = requests.get(url)
+    json = response.json()
+    status = json.get('status')
+    return json, status
 
 
 def insert_articles(c, key_to_articles, conn):
@@ -206,19 +209,19 @@ if __name__ == "__main__":
     print('TOP 40 Terms:')
     top_40_keywords = [key[0] for key in top_40]
     print(top_40_keywords)
-    # OPTIONAL #
-    csv_writer = csv.writer(open('top-40.csv', 'w', newline='', encoding='utf-8'))  # Open and create csv file
-    csv_writer.writerow(['WORD', 'DOCS', 'TF-IDF'])  # write header
-    for keyword in top_40:
-        csv_writer.writerow([keyword[0], keyword[1][0], keyword[1][1]])  # write to row csv file
-    # OPTIONAL #
+    # # OPTIONAL #
+    # csv_writer = csv.writer(open('top-40.csv', 'w', newline='', encoding='utf-8'))  # Open and create csv file
+    # csv_writer.writerow(['WORD', 'DOCS', 'TF-IDF'])  # write header
+    # for keyword in top_40:
+    #     csv_writer.writerow([keyword[0], keyword[1][0], keyword[1][1]])  # write to row csv file
+    # # OPTIONAL #
 
-    # CREATE KEYWORDS BY TOPICS:
-    # OPTIONAL #
-    data = keywords_by_topic(tfidf_matrix, tfidf_tokens, titles, doc_index)  # Get the keywords
-    csv_writer = csv.writer(open('tf-idf.csv', 'w', newline='', encoding='utf-8'))
-    csv_writer.writerows(data)
-    # OPTIONAL #
+    # # CREATE KEYWORDS BY TOPICS:
+    # # OPTIONAL #
+    # data = keywords_by_topic(tfidf_matrix, tfidf_tokens, titles, doc_index)  # Get the keywords
+    # csv_writer = csv.writer(open('tf-idf.csv', 'w', newline='', encoding='utf-8'))
+    # csv_writer.writerows(data)
+    # # OPTIONAL #
 
     # 10 TERMS FROM DOMAIN KNOWLEDGE:
     print('\nTOP 10 TERMS USING DOMAIN KNOWLEDGE')
