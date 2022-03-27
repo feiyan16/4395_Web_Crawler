@@ -177,12 +177,12 @@ if __name__ == "__main__":
     # NOTE:
     # If you run WEB CRAWLER again, it will pull a different set of urls and ultimately
     # will cause a different list of top 40 terms, which means you will have to re-pick the top 10 terms from those
-    # 40 terms, and recreate the knowledge base... SO. Proceed with CAUTION
+    # the top 10 terms from those 40 terms, and then recreate the SQL database
 
     # WEB CRAWLER:
-    # process = CrawlerProcess()
-    # process.crawl(Crawler.RedditSpider)
-    # process.start()
+    process = CrawlerProcess()
+    process.crawl(Crawler.RedditSpider)
+    process.start()
 
     # CREATE PROCESSED_TEXTS:
     titles = {}  # e.g. {14: 'url title'} = title of url_14.txt is 'url title'
@@ -204,6 +204,13 @@ if __name__ == "__main__":
     tfidf_matrix = tfidfvectorizer.fit_transform(corpus)
     tfidf_tokens = tfidfvectorizer.get_feature_names_out()
 
+    # NOTE:
+    # The top 40 terms may change everytime the web crawler is ran, because the url pages
+    # of reddit discussions can change as people comment in the discussion, if you want
+    # to see the original top 40 terms used to create the top 10 terms and knowledge base,
+    # use the scraped texts in scraped_texts.example, make sure you place the texts in
+    # the scraped_texts directory
+
     # CREATE TOP 40 TERMS:
     top_40 = get_top40(tfidf_matrix, tfidf_tokens, doc_index)[:40]  # Get the 40 terms
     print('TOP 40 Terms:')
@@ -223,6 +230,12 @@ if __name__ == "__main__":
     # csv_writer.writerows(data)
     # # OPTIONAL #
 
+    # NOTE:
+    # These top 10 terms are taken from the top 40 terms generated when using the scraped texts in
+    # scraped_texts.example, which were the original url pages crawled and scraped when developing this
+    # project. Since we use a reddit discussion page, the links in the pages at the urls we crawl
+    # will change as it's supposed to as more people comment in the discussion.
+
     # 10 TERMS FROM DOMAIN KNOWLEDGE:
     print('\nTOP 10 TERMS USING DOMAIN KNOWLEDGE')
     top_10_keywords = ['joker', 'reeves', 'keoghan', 'arkham', 'markets', 'theatre', 'knight', 'pattinson', 'dark',
@@ -237,6 +250,9 @@ if __name__ == "__main__":
     create_tables(cursor, connection)
     insert_keywords(cursor, top_10_keywords, connection)
     insert_articles(cursor, get_articles(top_10_keywords), connection)
+
+    # NOTE:
+    # Here is a sample query for getting facts of a particular term from the sql database
 
     # SAMPLE QUERY
     keyword_id = query_for_keyword_id(cursor, 'joker')
