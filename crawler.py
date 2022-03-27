@@ -1,9 +1,7 @@
 import sys
 
-from scrapy.exceptions import CloseSpider, IgnoreRequest
-from scrapy import signals, Spider
-from twisted.internet.defer import Deferred, inlineCallbacks
-from twisted.python.failure import Failure, NoCurrentExceptionError
+from scrapy.exceptions import CloseSpider
+from scrapy import signals
 
 import sys_color as write
 import scrapy
@@ -11,19 +9,17 @@ import scrapy
 
 class RedditSpider(scrapy.Spider):
     name = 'Reddit-Movies'
-    # START_URLS 1:
-    # start_urls = ['https://old.reddit.com/r/movscraped_textsies/']
     start_urls = ['https://old.reddit.com/search?q=the+batman&count=22&after=t3_tjkf1z']  # URL page to start with
-    counter = 0  # relevant link counter, used to exit once it hits 20
+    counter = 0  # relevant link counter, used as a timer
 
-    # FOR START_URLS 1:
-    # def parse(self, response, **kwargs):
-    #     links = [a for a in response.xpath('//a[contains(@data-event-action, "title")]/@href').getall()]
-    #     for url in links:
-    #         if 'reddit' not in url:
-    #             if 'https://' in url:
-    #                 if '.png' not in url and '.gif' not in url and '.jpg' not in url:
-    #                     yield scrapy.Request(url=url, callback=self.parse_page)
+    @classmethod
+    def from_crawler(cls, crawler, *args, **kwargs):
+        spider = super(RedditSpider, cls).from_crawler(crawler, *args, **kwargs)
+        crawler.signals.connect(spider.spider_closed, signal=signals.spider_closed)
+        return spider
+
+    def spider_closed(self, spider):
+        spider.logger.info(f'RedditSpider closed: link count == {self.counter}')
 
     def parse(self, response, **kwargs):
         write.stdout(f'current page {response.url}')
@@ -39,9 +35,6 @@ class RedditSpider(scrapy.Spider):
 
         yield from self.go_to_next_page(response)  # go to the next page in the reddit forum/discussion
 
-        if self.counter == 20:
-            raise CloseSpider(f'link count == {self.counter}')
-
     def go_to_next_page(self, response):
         # Get the url for the next page by getting the href attribute value from the next page html button
         next_page = response.xpath('//a[contains(@rel, "nofollow next")]/@href').get()
@@ -53,6 +46,7 @@ class RedditSpider(scrapy.Spider):
 
     def parse_page(self, response):
         if self.counter == 20:
+            sys.exit(0)
             raise CloseSpider(f'link count == {self.counter}')
         write.stdout(f'Parsing {response.url}...')
         body = self.scrape(response)  # scrape for texts on page
