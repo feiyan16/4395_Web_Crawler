@@ -3,3 +3,4 @@
 sql
 processed_texts
 scraped_texts
+*.sql
