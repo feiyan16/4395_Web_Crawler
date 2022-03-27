@@ -6,12 +6,12 @@
 ## Overview:
 1) Unzip 4395_webcrawler_proj.zip 
 2) Files you should see: 	
-	* crawler.py 			-	Code for web crawler/scraper
-	* Keyword_Database.sql 		- 	SQL file that contains the knowledge-base
-	* main.py 			- 	Code for parsing text, running tf-idf, and creating knowledge-base
-	* processed_texts.example	- 	Contains text files that are sentences from scraped texts, DO NOT CHANGE
-	* scraped_texts.example		- 	Contains text files that are text scraped from the urls, DO NOT CHANGE
-	* sys_color.py 			- 	File that contains functions to pring colored text in terminal to make debugging easier
+	* **crawler.py** 			-	Code for web crawler/scraper
+	* **Keyword_Database.sql** 		- 	SQL file that contains the knowledge-base
+	* **main.py** 			- 	Code for parsing text, running tf-idf, and creating knowledge-base
+	* **processed_texts.example**	- 	Contains text files that are sentences from scraped texts, DO NOT CHANGE
+	* **scraped_texts.example**		- 	Contains text files that are text scraped from the urls, DO NOT CHANGE
+	* **sys_color.py** 			- 	File that contains functions to pring colored text in terminal to make debugging easier
 	* <img width="711" alt="image" src="https://user-images.githubusercontent.com/55895535/160305411-d97049b4-c7e4-4afa-b3c1-d22f41859743.png">
 
 ## Steps to Run:
