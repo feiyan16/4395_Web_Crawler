@@ -44,26 +44,32 @@
 ### Debugging texts about the crawler
 * Text in pink/purple/blue that says ```current page <url>```, this tells what page the crawler is currently at
 
+	Example:
 	<img width="577" alt="image" src="https://user-images.githubusercontent.com/55895535/160305593-a1a91efc-f499-4308-a1ec-92de691970bc.png">
 
 * Text in pink/purple/blue that says ```Going to next page <url>```, this tells that the crawler is going to the second page of the sub-reddit discussion
 
+	Example:
 	<img width="577" alt="image" src="https://user-images.githubusercontent.com/55895535/160305606-7f456c8e-5f41-42d0-b50a-b090be703e2c.png">
 
 * Text in pink/purple/blue that says ```Parsing <url>```, this tells what url is currently being parsed. It is then followed by text in green that says ```SUCCESS: <url> written successfully as scraped_texts/url_x.txt```, this says that the parsing was sucessfuly and a text file with the scraped text was written out
 
+	Example:
 	<img width="1175" alt="image" src="https://user-images.githubusercontent.com/55895535/160305621-74ae0930-0b95-4469-a4e9-651462352db6.png">
 
 * Text in yellow that says ```WARNING: <url> does not have enough data...```, this tells that this url page does not have enough text on it for it to have enough information
 
+	Example:
 	<img width="977" alt="image" src="https://user-images.githubusercontent.com/55895535/160305629-8200d2d8-fa5e-4cf7-a2eb-1318eb4ea776.png">
 
 * Text in red that says ```ERROR: No Next Page!```, this tells that there is no more next page in the sub-reddit discussion
 
+	Example:
 	<img width="148" alt="image" src="https://user-images.githubusercontent.com/55895535/160305642-1429850a-8277-4822-8a73-7a515d3b977c.png">
 
 * If you see traceback errors like this: 
 
+	Example:
 	<img width="868" alt="image" src="https://user-images.githubusercontent.com/55895535/160305661-b559035c-1917-4b1a-9248-b19030582e4b.png">
 
 It's because I have not found a way to peacefully terminate the crawler once I hit a url-link counter of 20, and am using sys.exit(0), so just ignore it for now.
