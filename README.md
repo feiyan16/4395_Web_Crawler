@@ -31,6 +31,10 @@
 * Look for the headers, ```TOP 40 Terms:``` and ```TOP 10 TERMS USING DOMAIN KNOWLEDGE```. You can command/ctrl-f it to make it faster.
 
 	<img width="1181" alt="image" src="https://user-images.githubusercontent.com/55895535/160305558-8abeb30d-88cb-4af8-8549-a4cae5316377.png">
+	
+* If you want to see the top 25 terms for each url page, you can uncomment ```CREATE KEYWORDS BY TOPICS:``` (cmd/ctrl-f it in the code), and the a csv will be outputted with the terms:
+
+	<img width="749" alt="image" src="https://user-images.githubusercontent.com/55895535/160306001-097cbbe6-ca8c-4d0e-a3b7-c6b5f11d1197.png">
 
 
 ## To see sample query from database:
