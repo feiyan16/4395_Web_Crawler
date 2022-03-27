@@ -1,3 +1,8 @@
+
+# 4395 Project 1: Web Crawler Project
+# fxs180012, Alice Su
+# aad180004, Amer Din
+
 import sys
 
 from scrapy.exceptions import CloseSpider

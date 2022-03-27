@@ -1,3 +1,8 @@
+
+# 4395 Project 1: Web Crawler Project
+# fxs180012, Alice Su
+# aad180004, Amer Din
+
 class Colors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
